@@ -1,0 +1,116 @@
+﻿@addTagHelper *, BundlerMinifier.TagHelpers
+@inject BTCPayServer.HostedServices.CssThemeManager themeManager
+
+@model BTCPayServer.Controllers.ShowLightningNodeInfoViewModel
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>@Model.StoreName – @Model.CryptoCode Lightning Node</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <link rel="apple-touch-icon" href="~/img/icons/icon-512x512.png" asp-append-version="true">
+    <link rel="apple-touch-startup-image" href="~/img/splash.png" asp-append-version="true">
+    <link rel="manifest" href="~/manifest.json">
+    <link href="@Context.Request.GetRelativePathOrAbsolute(themeManager.BootstrapUri)" rel="stylesheet" asp-append-version="true" />
+    <link href="@Context.Request.GetRelativePathOrAbsolute(themeManager.ThemeUri)" rel="stylesheet" asp-append-version="true" />
+    <link href="~/vendor/font-awesome/css/font-awesome.min.css" rel="stylesheet" asp-append-version="true" />
+    <bundle name="wwwroot/bundles/lightning-node-info-bundle.min.js" asp-append-version="true" />
+    <script type="text/javascript">
+        var srvModel = @Safe.Json(Model);
+
+        window.onload = function() {
+            Vue.use(Toasted);
+            new Vue({
+                el: '#app',
+                components: {
+                    qrcode: VueQrcode
+                },
+                data: {
+                    srvModel: srvModel
+                },
+                mounted: function() {
+                    this.$nextTick(function() {
+                        var copyInput = new Clipboard('.copy');
+                        copyInput.on("success", function() {
+                            Vue.toasted.show('Copied', {
+                                iconPack: "fontawesome",
+                                icon: "copy",
+                                duration: 5000
+                            });
+                        });
+                    });
+                }
+            });
+        }
+    </script>
+    <style>
+        [v-cloak] {
+            display: none;
+        }
+
+        .qr-icon {
+            height: 64px;
+            width: 64px;
+            position: absolute;
+            left: 0;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            margin: auto;
+        }
+
+        .qr-container {
+            position: relative;
+            text-align: center;
+        }
+
+        .qr-container svg {
+            width: 256px;
+            height: 256px;
+        }
+
+        .copy {
+            cursor: copy;
+        }
+    </style>
+</head>
+<body>
+    <div id="app" class="container">
+        <div class="row" style="height:100vh">
+            <div class="col-md-8 col-sm-12 col-lg-6 mx-auto my-auto">
+                <div class="card border-0">
+                    <div class="card-body p-4">
+                        <h1 class="card-title text-center" v-text="srvModel.storeName">@Model.StoreName</h1>
+                        <h2 class="card-subtitle text-center text-secondary mb-2">
+                            <span v-text="srvModel.cryptoCode">@Model.CryptoCode</span>
+                            Lightning Node
+                        </h2>
+                        <h3 class="card-title text-center">
+                            <span v-text="srvModel.available ? 'Online' : 'Unavailable'">
+                                @(Model.Available ? "Online" : "Unavailable")
+                            </span>
+                            <small class="text-@(Model.Available ? "success" : "danger")" :class="{ 'text-success': srvModel.available, 'text-danger': !srvModel.available }">
+                                <span class="fa fa-circle"></span>
+                            </small>
+                        </h3>
+                        <div class="qr-container my-3" v-cloak v-if="srvModel.available">
+                            <img src="" alt="@Model.CryptoCode" class="qr-icon" :src="srvModel.cryptoImage" v-bind:alt="srvModel.cryptoCode" />
+                            <qrcode v-bind:value="srvModel.nodeInfo" :options="{ width: 256, margin: 1, color: {dark:'#000', light:'#f5f5f7'} }" tag="svg"></qrcode>
+                        </div>
+                        <div data-clipboard-target="#peer-info" class="input-group copy d-@(Model.Available ? "flex" : "none")" :class="{ 'd-flex': srvModel.available, 'd-none': !srvModel.available }">
+                            <input type="text" class="form-control" readonly="readonly" asp-for="NodeInfo" id="peer-info" :value="srvModel.nodeInfo" />
+                            <div class="input-group-append">
+                                <span class="input-group-text fa fa-copy py-2"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
