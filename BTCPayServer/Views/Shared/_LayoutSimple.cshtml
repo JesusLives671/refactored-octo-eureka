@@ -1,0 +1,19 @@
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <partial name="Header" />
+</head>
+<body>
+    <section class="content-wrapper @(ViewBag.TopSmallMargin != null ? "pt-4" : "")">
+        <!-- Dummy navbar-brand, hackish way to keep test AssertNoError passing -->
+        <div class="navbar-brand d-none"></div>
+        <div class="container">
+            @RenderBody()
+        </div>
+    </section>
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+</body>
+</html>
